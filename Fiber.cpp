@@ -3,14 +3,17 @@
 
 #include"Comm.h"
 #include"Fiber.h"
+#include"threadPoll_fiber_scheduler.h"
+
+/// 协程总数
+static uint64_t s_fiber_count=0;
+/// 当前已用协程id号
+static uint64_t s_fiber_id=0;
 
 ///当前线程正在运行的协程
 static thread_local Fiber* t_fiber=nullptr;
 ///当前线程的主协程
-static thread_local Fiber::ptr t_thread_fiber=nullptr;
-
-
-
+static thread_local std::shared_ptr<Fiber> t_thread_fiber=nullptr;
 
 Fiber::Fiber()
 {
@@ -29,7 +32,7 @@ Fiber::Fiber()
 }
 
 Fiber::Fiber(std::function<void()> cb, size_t stacksize, bool run_in_scheduler)
-:m_id(s_fiber_id++),m_cb(cb)
+:m_id(s_fiber_id++),m_cb(cb),m_runInscheduler(run_in_scheduler)
 {
     ++s_fiber_count;
     m_stacksize= stacksize ? stacksize: FIBER_STACK_SIZE_DEFAULT;
@@ -95,9 +98,18 @@ void Fiber::resume()
     m_state=RUNNING;
     /**
      * @brief swapcontext将本协程与主协程（正在运行的协程）交换
+     * @brief 多线程版本要与该协程的调度协程交换（子-子 交换），不是主协程
      */
-    if(swapcontext(&(t_thread_fiber->m_ctx),&m_ctx)){
-        assert(false);
+
+
+    if(m_runInscheduler){ std::cout<<"resume():   "<<scheduler::GetMainFiber()->getId()<<"---to---"<<getId()<<std::endl;
+        if(swapcontext(&(scheduler::GetMainFiber()->m_ctx),&m_ctx)){
+            assert(false);
+        }
+    }else{
+        if(swapcontext(&(t_thread_fiber->m_ctx),&m_ctx)){
+                assert(false);
+            }
     }
 
 }
@@ -109,10 +121,17 @@ void Fiber::yield()
     if(m_state!=TERM){
         m_state=READY;
     }
-
-    if(swapcontext(&m_ctx,&(t_thread_fiber->m_ctx))){
+   
+    if(m_runInscheduler){
+        if(swapcontext(&m_ctx,&(scheduler::GetMainFiber()->m_ctx))){
+            assert(false);
+        }
+    }else{
+        if(swapcontext(&m_ctx,&(t_thread_fiber->m_ctx))){
         assert(false);
     }
+    }
+    
 
 }
 
@@ -137,11 +156,13 @@ Fiber::ptr Fiber::GetThis()
 
 uint64_t Fiber::TotalFibers()
 {
+    
     return s_fiber_count;
 }
 
 void Fiber::MainFunc()
 {
+    
     Fiber::ptr cur=GetThis();//get里面的shared_from_this方法会让引用计数加1
     assert(cur);
 

@@ -7,7 +7,6 @@
 #include<assert.h>
 #include<string.h>
 
-
 class Fiber: public std::enable_shared_from_this<Fiber>
 {
     public:
@@ -102,9 +101,12 @@ class Fiber: public std::enable_shared_from_this<Fiber>
         void* m_stack=nullptr;
         /// 协程的入口函数
         std::function<void()> m_cb;
-        /// 协程是都参与调度器调度
+        /// 协程是否参与调度器调度
         bool m_runInscheduler;
 
 };
 
+
+
 #endif
+
