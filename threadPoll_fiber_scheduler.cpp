@@ -10,7 +10,7 @@ static thread_local Fiber* t_scheduler_fiber=nullptr;
 
 scheduler::scheduler(size_t threads, bool use_caller, const std::string &name)
 {
-    assert(threads>1);
+    //assert(threads>1);
 
     m_useCaller=use_caller;
     m_name=name;
@@ -102,7 +102,7 @@ void scheduler::stop()
         m_mutex.unlock();
     }
     for(auto &i:thrs){
-        std::cout<<"join"<<i->getId()<<std::endl;
+        std::cout<<"join-------------:      "<<i->getId()<<std::endl;
         i->join();
     }
     std::cout<<"scheduler stop succeed ----------"<<std::endl;
@@ -114,10 +114,10 @@ Fiber* scheduler::GetMainFiber()
 }
 
 
-//当前没有什么作用，IO模块会进行重写
+//这里没有什么作用，IO模块会进行重写
 void scheduler::tickle()
 {
-    
+    std::cout<<"scheduler::tickle()"<<std::endl;
 }
 
 
@@ -130,6 +130,7 @@ void scheduler::run()
     }
 
     Fiber::ptr idle_fiber(new Fiber(std::bind(&scheduler::idle,this)));
+    std::cout<<"idle_fiber:    "<<idle_fiber->getId()<<std::endl;
     Fiber::ptr cb_fiber;//预创建的协程，用于执行下面的函数型任务
     
     ScheduleTask task;
@@ -139,7 +140,7 @@ void scheduler::run()
         bool tickle_me=false;//是否tickle其他线程进行任务调度
         {  
             m_mutex.lock();
-            std::cout<<"lock"<<std::endl;
+            
             auto it=m_tasks.begin();
             //遍历所有调度任务
             while (it!=m_tasks.end())
@@ -166,7 +167,7 @@ void scheduler::run()
 
             }
             
-            std::cout<<"unlock"<<std::endl;
+            
             m_mutex.unlock();
 
             //当前线程拿完一个任务后，发现任务队列还有剩余，tickle其他线程
@@ -197,9 +198,9 @@ void scheduler::run()
                 std::cout<<"idle fiber term  threadId:  "<<Thread::GetThreadId()<<std::endl;
                 break;
             }
-            ++m_idleThreadCount;  std::cout<<"in idle "<<Thread::GetThreadId()<<std::endl;
+            ++m_idleThreadCount;  //std::cout<<"in idle "<<Thread::GetThreadId()<<std::endl;
             idle_fiber->resume();
-            --m_idleThreadCount;  std::cout<<"out idle "<<Thread::GetThreadId()<<std::endl;
+            --m_idleThreadCount;  //std::cout<<"out idle "<<Thread::GetThreadId()<<std::endl;
         }
 
         
@@ -210,17 +211,22 @@ void scheduler::run()
 //不断yeild
 void scheduler::idle()
 {   
+    
     if(m_stopping==true) return;
-    Fiber::GetThis()->yield();//协程里自己yield会变成ready，若是自己没有yeild，执行完了进入了MainFunc封装的yeild就会编程TREM
+    Fiber::GetThis()->yield();//协程里自己yield会变成ready，若是自己没有yeild，执行完了进入了MainFunc封装的yeild就会变成TREM
 }
 
 
 bool scheduler::stopping()
 {
+    std::cout<<"stopping()"<<std::endl;
     m_mutex.lock();
     //正在停止，任务队列为空，活跃线程数为0，才可以停止
     bool ret=(m_stopping&&m_tasks.empty()&&m_activeThreadCount==0);
     m_mutex.unlock();
+    std::cout<<"m_stopping="<<m_stopping<<std::endl;
+    std::cout<<"m_tasks="<<m_tasks.empty()<<std::endl;
+    std::cout<<"m_activeThreadCount="<<m_activeThreadCount<<std::endl;
     return ret;
     
 }

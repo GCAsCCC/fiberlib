@@ -36,7 +36,7 @@ Fiber::Fiber(std::function<void()> cb, size_t stacksize, bool run_in_scheduler)
 {
     ++s_fiber_count;
     m_stacksize= stacksize ? stacksize: FIBER_STACK_SIZE_DEFAULT;
-    m_stack=alloca(m_stacksize);
+    m_stack=malloc(m_stacksize);
     memset(m_stack,0,m_stacksize);
 
     if(getcontext(&m_ctx))
@@ -102,7 +102,7 @@ void Fiber::resume()
      */
 
 
-    if(m_runInscheduler){ std::cout<<"resume():   "<<scheduler::GetMainFiber()->getId()<<"---to---"<<getId()<<std::endl;
+    if(m_runInscheduler){ std::cout<<"resume():   "<<scheduler::GetMainFiber()->getId()<<"---to---"<<getId()<<std::endl; assert(&m_ctx);
         if(swapcontext(&(scheduler::GetMainFiber()->m_ctx),&m_ctx)){
             assert(false);
         }
@@ -121,8 +121,9 @@ void Fiber::yield()
     if(m_state!=TERM){
         m_state=READY;
     }
+
    
-    if(m_runInscheduler){
+    if(m_runInscheduler){std::cout<<"yield():   "<<getId()<<"---to---"<<scheduler::GetMainFiber()->getId()<<std::endl;
         if(swapcontext(&m_ctx,&(scheduler::GetMainFiber()->m_ctx))){
             assert(false);
         }
@@ -170,6 +171,10 @@ void Fiber::MainFunc()
     cur->m_cb();
     cur->m_cb=nullptr;
     cur->m_state=TERM;//cur->m_cb()后该函数的协程一定执行完毕，RUNNING->READY的情况应该在m_cb里
+
+    
+    std::cout<<"thread_name: "<<Thread::GetName()<<" Fiber:"<<cur->m_id<<" is TREM"<<std::endl;
+    
 
     auto tem_ptr =cur.get();
     cur.reset();//手动让t_fiber的引用减1

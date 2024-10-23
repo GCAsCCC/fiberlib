@@ -1,10 +1,13 @@
-exe: test.cpp Fiber.o threadPoll_fiber_scheduler.o  Semaphore.o Thread.o
-	g++ -o exe -g test.cpp   threadPoll_fiber_scheduler.o Fiber.o Semaphore.o Thread.o 
+io_test: io_test.cpp Fiber.o IOManager.o  Semaphore.o Thread.o threadPoll_fiber_scheduler.o
+	g++ -o io_test -g io_test.cpp  IOManager.o threadPoll_fiber_scheduler.o Fiber.o Semaphore.o Thread.o 
 
-threadPoll_fiber_scheduler.o: threadPoll_fiber_scheduler.h threadPoll_fiber_scheduler.cpp Comm.h Fiber.h
+threadPoll_fiber_scheduler.o: threadPoll_fiber_scheduler.cpp threadPoll_fiber_scheduler.h Comm.h Fiber.h
 	g++ -g -c threadPoll_fiber_scheduler.cpp
 
-Fiber.o: Fiber.h Fiber.cpp Comm.h threadPoll_fiber_scheduler.h
+IOManager.o: IOManager.cpp IOManager.h threadPoll_fiber_scheduler.h threadPoll_fiber_scheduler.cpp
+	g++ -g -c IOManager.cpp 
+
+Fiber.o: Fiber.h Fiber.cpp Comm.h
 	g++ -g -c Fiber.cpp
 
 Semaphore.o: Semaphore.cpp Semaphore.h
@@ -14,4 +17,4 @@ Thread.o: Thread.h Thread.cpp
 	g++ -g -c Thread.cpp -lpthread
 
 clean: 
-	rm *.o exe *.gch
+	rm *.o io_test *.gch
