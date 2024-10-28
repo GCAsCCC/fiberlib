@@ -5,9 +5,10 @@
 #include<iostream>
 #include"threadPoll_fiber_scheduler.h"
 #include"mutex.h"
+#include"TimerManager.h"
 
 
-class IOManager:public scheduler{
+class IOManager:public scheduler,public TimerManager{
 
 public:
     typedef std::shared_ptr<IOManager> ptr;
@@ -133,13 +134,15 @@ protected:
     void tickle() override;
     void idle() override;
     bool stopping()override;
-
+    
+    void onTimerInsertedAtFront() override;
     /**
      * @brief 重置socket句柄上下文的容器大小
      * @param[in] size 容量大小
      */
     void contextResize(size_t size);
-
+    
+    bool stopping(uint64_t& timeout);
     /**
      * @brief 判断是否可以停止
      * @return 返回是否可以停止

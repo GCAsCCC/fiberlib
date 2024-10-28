@@ -92,7 +92,7 @@ void scheduler::stop()
     //在use caller情况下，调度器协程结束时，应该返回caller协程
     if(m_rootFiber){
         m_rootFiber->resume();
-        std::cout<<"----m_rootFiber end";
+        //std::cout<<"----m_rootFiber end";
     }
 
     std::vector<Thread::ptr> thrs;
@@ -102,10 +102,10 @@ void scheduler::stop()
         m_mutex.unlock();
     }
     for(auto &i:thrs){
-        std::cout<<"join-------------:      "<<i->getId()<<std::endl;
+        //std::cout<<"join-------------:      "<<i->getId()<<std::endl;
         i->join();
     }
-    std::cout<<"scheduler stop succeed ----------"<<std::endl;
+    //std::cout<<"scheduler stop succeed ----------"<<std::endl;
 }
 
 Fiber* scheduler::GetMainFiber()
@@ -130,7 +130,6 @@ void scheduler::run()
     }
 
     Fiber::ptr idle_fiber(new Fiber(std::bind(&scheduler::idle,this)));
-    std::cout<<"idle_fiber:    "<<idle_fiber->getId()<<std::endl;
     Fiber::ptr cb_fiber;//预创建的协程，用于执行下面的函数型任务
     
     ScheduleTask task;
@@ -219,14 +218,11 @@ void scheduler::idle()
 
 bool scheduler::stopping()
 {
-    std::cout<<"stopping()"<<std::endl;
+    
     m_mutex.lock();
     //正在停止，任务队列为空，活跃线程数为0，才可以停止
     bool ret=(m_stopping&&m_tasks.empty()&&m_activeThreadCount==0);
     m_mutex.unlock();
-    std::cout<<"m_stopping="<<m_stopping<<std::endl;
-    std::cout<<"m_tasks="<<m_tasks.empty()<<std::endl;
-    std::cout<<"m_activeThreadCount="<<m_activeThreadCount<<std::endl;
     return ret;
     
 }

@@ -102,7 +102,7 @@ void Fiber::resume()
      */
 
 
-    if(m_runInscheduler){ std::cout<<"resume():   "<<scheduler::GetMainFiber()->getId()<<"---to---"<<getId()<<std::endl; assert(&m_ctx);
+    if(m_runInscheduler){ //std::cout<<"resume():   "<<scheduler::GetMainFiber()->getId()<<"---to---"<<getId()<<std::endl; assert(&m_ctx);
         if(swapcontext(&(scheduler::GetMainFiber()->m_ctx),&m_ctx)){
             assert(false);
         }
@@ -123,7 +123,7 @@ void Fiber::yield()
     }
 
    
-    if(m_runInscheduler){std::cout<<"yield():   "<<getId()<<"---to---"<<scheduler::GetMainFiber()->getId()<<std::endl;
+    if(m_runInscheduler){//std::cout<<"yield():   "<<getId()<<"---to---"<<scheduler::GetMainFiber()->getId()<<std::endl;
         if(swapcontext(&m_ctx,&(scheduler::GetMainFiber()->m_ctx))){
             assert(false);
         }
