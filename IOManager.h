@@ -31,7 +31,7 @@ public:
     /// @param threads 线程数量
     /// @param use_caller 是否使用主线程进行任务执行
     /// @param name 调度器的名字
-    IOManager(size_t threads,bool use_caller,const std::string &name);
+    IOManager(size_t threads = 1,bool use_caller = true,const std::string &name = "");
 
      /**
      * @brief 析构函数

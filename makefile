@@ -1,7 +1,7 @@
-tm_test: tm_test.cpp Fiber.o IOManager.o  Semaphore.o Thread.o threadPoll_fiber_scheduler.o TimerManager.o util.o
-	g++ -o tm_test -g tm_test.cpp  IOManager.o TimerManager.o Timer.o threadPoll_fiber_scheduler.o Fiber.o Semaphore.o Thread.o util.o
+hook_test: hook_test.cpp Fiber.o IOManager.o  Semaphore.o Thread.o threadPoll_fiber_scheduler.o TimerManager.o util.o fd_manager.o
+	g++ -v -o hook_test -g -L. hook_test.cpp  IOManager.o TimerManager.o Timer.o threadPoll_fiber_scheduler.o -lhook fd_manager.o Fiber.o Semaphore.o Thread.o util.o
 
-threadPoll_fiber_scheduler.o: threadPoll_fiber_scheduler.cpp threadPoll_fiber_scheduler.h Comm.h Fiber.h
+threadPoll_fiber_scheduler.o: threadPoll_fiber_scheduler.cpp threadPoll_fiber_scheduler.h Comm.h Fiber.h libhook.so
 	g++ -g -c threadPoll_fiber_scheduler.cpp
 
 util.o: util.cpp util.h
@@ -25,5 +25,11 @@ Semaphore.o: Semaphore.cpp Semaphore.h
 Thread.o: Thread.h Thread.cpp
 	g++ -g -c Thread.cpp -lpthread
 
+libhook.so: hook.cpp hook.h fd_manager.o
+	g++ -fPIC -shared hook.cpp -o libhook.so
+
+fd_manager.o: fd_manager.cpp fd_manager.h
+	g++ -g -c fd_manager.cpp
+
 clean: 
-	rm *.o io_test *.gch tm_test test
+	rm *.o io_test *.gch tm_test test *.so

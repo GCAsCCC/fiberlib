@@ -1,7 +1,7 @@
 #include"threadPoll_fiber_scheduler.h"
 #include"Fiber.h"
 #include"Comm.h"
-
+#include"hook.h"
 
 ///当前线程的调度器，同一调度器下的所有线程指向同一个调度器实例
 static thread_local scheduler *t_scheduler =nullptr;
@@ -123,6 +123,8 @@ void scheduler::tickle()
 
 void scheduler::run()
 {
+    set_hook_enable(true);
+    
     std::cout<<"run"<<std::endl;
     setThis();
     if(Thread::GetThreadId()!=m_rootThread){//如果不是调度器所在线程
